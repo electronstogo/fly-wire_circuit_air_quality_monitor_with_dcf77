@@ -150,7 +150,7 @@ void loop()
 	DCF77 dcf77;
 	
 	// value that activates a time syncronizing process with DCF77.
-	bool sync_mode_active = false;
+	bool sync_mode_active = true;
 	
 	
 	
