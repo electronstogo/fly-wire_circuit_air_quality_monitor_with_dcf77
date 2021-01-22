@@ -10,16 +10,16 @@ DCF77::DCF77()
 {
 	// configurate the DCF77 interrupt and enable pins.
 	pinMode(DCF77_DATA_PIN, INPUT);
-    pinMode(DCF77_ENABLE_PIN, OUTPUT);
-    
-    // activate the pull up for the data pin.
-    // Is used because the DCF77 signal comes from a open collectot output.
-    digitalWrite(DCF77_DATA_PIN, HIGH);
-    
-    // activate the DCF77 module.
-    digitalWrite(DCF77_ENABLE_PIN, HIGH);
-    delay(100);
-    digitalWrite(DCF77_ENABLE_PIN, LOW);
+	pinMode(DCF77_ENABLE_PIN, OUTPUT);
+
+	// activate the pull up for the data pin.
+	// Is used because the DCF77 signal comes from a open collectot output.
+	digitalWrite(DCF77_DATA_PIN, HIGH);
+
+	// activate the DCF77 module.
+	digitalWrite(DCF77_ENABLE_PIN, HIGH);
+	delay(100);
+	digitalWrite(DCF77_ENABLE_PIN, LOW);
 
 }
 
@@ -72,29 +72,29 @@ bool DCF77::syncronize_time()
 
 	unsigned int dcf_data_index = 1234;
 	unsigned int watchdog_counter = 0;
-	
+
 	// this timestamp is used to calculate the waiting time, until the minute is finished
 	unsigned long signal_timestamp;
 
-    while(1)
+	while(1)
 	{
-	
+
 		// loop until the next bit from DCF77 was received. 
 		while(!dcf_signal_triggered)
 		{	
 			delay(1);
 		}
-		
+
 		signal_timestamp = millis();
-		
+
 		// analyze the signal timings.
 		this->handle_dcf_signal(timestamp_high_signal - timestamp_low_signal, &dcf_data_index, dcf_data);
-		
+
 		watchdog_counter += 1;
 		dcf_signal_triggered = false;
-		
-		
-		
+
+
+
 		// cancel the process after 5 min, in case of bad signal.
 		if(watchdog_counter > 300)
 		{
@@ -102,25 +102,23 @@ bool DCF77::syncronize_time()
 			EIMSK &= ~0x01;	
 			return false;
 		}
-		
-		
+
+
 		if(dcf_data_index == 58)
 		{
 			calculate_time_from_dcf77_data(dcf_data, signal_timestamp);
-		
+
 			// disable extern Interrupt for DCF77.
 			EIMSK &= ~0x01;
-			
+
 			// validate the received time data.
-			bool result = true;
-			
-			result = this->minutes < 60;
-			result = this->hours < 24 && result;
-			result = this->week_day <= 7 && result;
-			result = this->day_of_month <= 31 && result;
-			result = this->month <= 12 && result;
-			result = this->year < 100 && result; 			
-			
+			bool result = this->minutes < 60;
+			result = (this->hours < 24) && result;
+			result = (this->week_day <= 7) && result;
+			result = (this->day_of_month <= 31) && result;
+			result = (this->month <= 12) && result;
+			result = (this->year < 100) && result; 			
+
 			return result;
 		}
 	}
@@ -175,7 +173,7 @@ void DCF77::calculate_time_from_dcf77_data(unsigned char* dcf_data, unsigned lon
 	
 
 	// wait until the :00 seconds moment.
-	signed int waiting_time = 2000 - (millis() - last_signal_timestamp) - 200;
+	signed int waiting_time = 2000 - (millis() - last_signal_timestamp) - 250;
 	
 	if(waiting_time > 0)
 	{
@@ -209,7 +207,7 @@ void DCF77::calculate_time_from_dcf77_data(unsigned char* dcf_data, unsigned lon
 		
 		this->month += factors[i] * get_bit_value(dcf_data, 45 + i);
 		
-		if(i >= 4)
+		if(i >= 3)
 		{
 			continue;
 		}
