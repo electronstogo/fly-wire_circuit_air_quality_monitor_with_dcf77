@@ -131,70 +131,69 @@ void setup()
 // Arduino while loop
 void loop()
 {  
-    // Initiate the class variables.
-    // Attention: This doesnt work during the Arduino setup() function,
-    // because the I2C communication in the native Wire (TWI)library class will stuck.
-       
-    // SH1106 controller class variable to control the OLED display.
-    SH1106 sh1106(0x3C);
-   	char* char_pointer;
+	// Initiate the class variables.
+	// Attention: This doesnt work during the Arduino setup() function,
+	// because the I2C communication in the native Wire (TWI)library class will stuck.
+
+	// SH1106 controller class variable to control the OLED display.
+	SH1106 sh1106(0x3C);
+	char* char_pointer;
 	String string_buffer;
-    
-    // BME280 sensor class variable to read BME280 measurements.
+
+	// BME280 sensor class variable to read BME280 measurements.
 	BME280Sensor bme280_sensor;
-	
+
 	// SGP40 sensor class variable to read SGP40 measurements.
 	SGP40Sensor sgp40_sensor;
-	
+
 	// DCF77 class to syncronize the time.
 	DCF77 dcf77;
-	
+
 	// value that activates a time syncronizing process with DCF77.
 	bool sync_mode_active = true;
-	
-	
-	
+
+
 	unsigned char current_page_index = 1;
-	bool view_switch_enabled = true;
-	
+	bool view_switch_enabled = false;
+
 	// Following communication sets the control register of the RTC, for the 1Hz interrupt.
 	//Wire.beginTransmission(RTC_I2C_ADDRESS);
 	//Wire.write(0x0E);
 	//Wire.write(0x40);
 	//Wire.endTransmission();
 	
-    while(1)
-    {     	
-    	
-    	if(sync_mode_active)
-    	{
-    		sh1106.clear_oled_buffer();
-    		sh1106.draw_string(20, 50, "TIME");
-    		sh1106.draw_string(20, 30, "SYNC...");
-    		sh1106.flush_oled_buffer();
-    		
-    		// do a time syncronization process.
-    		if(dcf77.syncronize_time())
-    		{
-    			set_rtc_time(dcf77.year, dcf77.month, dcf77.day_of_month, dcf77.week_day, dcf77.hours, dcf77.minutes, 0);
-    		}
-    		
-    		// disable syncronization mode.
-    		sync_mode_active = false;
-    	}
+	while(1)
+	{     	
+
+		if(sync_mode_active)
+		{
+			sh1106.clear_oled_buffer();
+			sh1106.draw_string(20, 50, "TIME");
+			sh1106.draw_string(20, 30, "SYNC...");
+			sh1106.flush_oled_buffer();
+
+			// do a time syncronization process.
+			if(dcf77.syncronize_time())
+			{
+				set_rtc_time(dcf77.year, dcf77.month, dcf77.day_of_month, dcf77.week_day, dcf77.hours, dcf77.minutes, 0);
+			}
+
+			// disable syncronization mode.
+			sync_mode_active = false;
+		}
 
 
 
 		// Show sensor/time data on the OLED display. 
 
 		// Clear the OLED display.
-	    sh1106.clear_oled_buffer(); 
+		sh1106.clear_oled_buffer(); 
 
 
 		// do a BME280 sensor measurement.
-	   	int32_t temperature;
+		int32_t temperature;
 		uint32_t pressure, humidity;
-	    bme280_sensor.do_humidity_temperature_pressure_measurement(&temperature, &pressure, &humidity);
+		bme280_sensor.do_humidity_temperature_pressure_measurement(&temperature, &pressure, &humidity);
 
 		// get the VOC index from SGP40.
 		unsigned int voc_index;
@@ -202,7 +201,7 @@ void loop()
 		{
 			voc_index = 1234;
 		}
-		
+
 
 		// check if the user pushes the button
 		if(!digitalRead(SWITCH_INPUT_PIN) && view_switch_enabled)
@@ -214,8 +213,8 @@ void loop()
 		{
 			view_switch_enabled = true;
 		}
-		
-		
+
+
 		if(current_page_index == 0)
 		{
 			//concatenate humidity.
@@ -224,26 +223,26 @@ void loop()
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 60, char_pointer);
-			
+
 			// concatenate temperature.
 			string_buffer = String(temperature / 100.0, 1);
 			string_buffer += "$C";
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 40, char_pointer);
-			
+
 			// pressure.
 			string_buffer = String(pressure);
 			string_buffer += " MBAR";
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 20, char_pointer);
-		
+
 		}
 		else
 		{
 			string_buffer = "VOC: ";
-			
+
 			if(voc_index != 1234)
 			{
 				string_buffer += String(voc_index);
@@ -252,20 +251,20 @@ void loop()
 			{
 				string_buffer += "ERROR";
 			}
-			
+
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 60, char_pointer);
-		
+
 			// read the current time from RTC.
 			unsigned int hours, minutes, seconds, day_of_month, week_day, year, month;
 			get_rtc_time_values(&year, &month, &day_of_month, &week_day, &hours, &minutes, &seconds);
-			
+
 			const char* week_day_names[7] = {"MO", "DI", "MI", "DO", "FR", "SA", "SO"};
-			
+
 			// Transform a 2 digit string for display.
 			char time_string[10];
-			
+
 			sprintf(time_string, "%i%i", hours / 10, hours % 10);
 			string_buffer = String(time_string);
 			string_buffer += ":";
@@ -279,8 +278,8 @@ void loop()
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 40, char_pointer);
-			 
-			
+
+
 			sprintf(time_string, "%i%i", day_of_month / 10, day_of_month % 10);
 			string_buffer = String(time_string);
 			string_buffer += ".";
@@ -291,19 +290,18 @@ void loop()
 			string_buffer += '\0';
 			char_pointer = string_buffer.c_str();
 			sh1106.draw_string(0, 20, char_pointer);
-        }
-        
-        // Draw data on the OLED display now.
-        sh1106.flush_oled_buffer();
-        
-        
-        
-        
-        // enter sleep mode, no need for a active controller, until the next display refresh.
+		}
+
+		// Draw data on the OLED display now.
+		sh1106.flush_oled_buffer();
+
+
+
+
+		// enter sleep mode, no need for a active controller, until the next display refresh.
 		// RTC 1Hz output will awake controller through a extern interrupt.
 		SMCR |= (1 << 0);
 		SMCR |= (1 << 2);
 		sleep_cpu();
-    }
+	}
 }
-
