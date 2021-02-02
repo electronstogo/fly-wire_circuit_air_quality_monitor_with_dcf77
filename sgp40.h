@@ -1,13 +1,12 @@
 #ifndef SGP40_H_
 #define SGP40_H_
 
-
 #include <Wire.h>
 extern "C" {
 #include "sensirion_voc_algorithm.h"
 };
 
-#define SGP40_I2C_ADDRESS 		0x59
+#define SGP40_I2C_ADDRESS 	0x59
 #define SGP40_CRC8_POLYNOMIAL 	0x31
 
 
