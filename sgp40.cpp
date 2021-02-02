@@ -44,7 +44,7 @@ bool SGP40Sensor::do_raw_measurement(float temperature, float humidity, unsigned
 	Wire.endTransmission();
 	
 	// wait until measurement is finished.
-    _delay_ms(25);
+   	 _delay_ms(25);
 	
 	// Get the raw data from sensor.
 	Wire.requestFrom(SGP40_I2C_ADDRESS, 3);
