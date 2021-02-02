@@ -3,55 +3,58 @@
 
 
 
-
-
 BME280Sensor::BME280Sensor()
 {  
-  // do a sensor reset, through sending 0xB6 to register address 0xE0
-  char command_data[2] = {0xE0, 0xB6};
-  Wire.beginTransmission(BME280_I2C_ADDRESS);
-  Wire.write(command_data, 2);
+	// do a sensor reset, through sending 0xB6 to register address 0xE0
+	char command_data[2] = {0xE0, 0xB6};
+	Wire.beginTransmission(BME280_I2C_ADDRESS);
+	Wire.write(command_data, 2);
   
   
-  // wait for adjust parameters, are written to memory.
-  while(true)
-  {
-    Wire.write(0xF3);
-    Wire.endTransmission();
-    Wire.requestFrom(BME280_I2C_ADDRESS, 1);
-    if(!(Wire.read() & 0x01))break;
-    for(int i = 0; i < 200; i++);
-  }
-  
-  Wire.endTransmission();
+	// wait for adjust parameters, are written to memory.
+	while(true)
+	{
+		Wire.write(0xF3);
+		Wire.endTransmission();
+		Wire.requestFrom(BME280_I2C_ADDRESS, 1);
+		
+		if(!(Wire.read() & 0x01))
+		{
+			break;
+		}
+		
+		for(int i = 0; i < 200; i++);
+	}
+
+	Wire.endTransmission();
   
 
-  // get adjustment parameters from memory.
-  this->get_adjust_register_data();
-    
+	// get adjustment parameters from memory.
+	this->get_adjust_register_data();
+
+
+	// set sensor asleep, before configuring.
+	Wire.beginTransmission(BME280_I2C_ADDRESS);
+	Wire.write(0xF4);
+	Wire.write(0b00);
+
+	// trigger forced mode of bmp sensor.
+	// configure all measurements, with oversampling rate 1.  
+
+	// write humidity configuration.
+	Wire.write(0xF2);
+	Wire.write(0b001);
+
+	// write temperature / pressure configuration and meas mode.
+	Wire.write(0xF4);
+	Wire.write(0b00100101);
+	Wire.endTransmission();
   
-  // set sensor asleep, before configuring.
-  Wire.beginTransmission(BME280_I2C_ADDRESS);
-  Wire.write(0xF4);
-  Wire.write(0b00);
-  
-  // trigger forced mode of bmp sensor.
-  // configure all measurements, with oversampling rate 1.  
-  
-  // write humidity configuration.
-  Wire.write(0xF2);
-  Wire.write(0b001);
-  
-  // write temperature / pressure configuration and meas mode.
-  Wire.write(0xF4);
-  Wire.write(0b00100101);
-  Wire.endTransmission();
-  
-  // disable filters.
-  Wire.beginTransmission(BME280_I2C_ADDRESS);
-  Wire.write(0xF5);
-  Wire.write(0x0);
-  Wire.endTransmission();
+	// disable filters.
+	Wire.beginTransmission(BME280_I2C_ADDRESS);
+	Wire.write(0xF5);
+	Wire.write(0x0);
+	Wire.endTransmission();
 }
 
 
@@ -67,9 +70,12 @@ void BME280Sensor::get_adjust_register_data()
 	Wire.write(0x88);
 	Wire.endTransmission();
 	
-
 	Wire.requestFrom(BME280_I2C_ADDRESS, 26);
-	for(int i = 0; i < 26; i++)reg_data[i] = Wire.read();
+	
+	for(int i = 0; i < 26; i++)
+	{
+		reg_data[i] = Wire.read();
+	}
 
 	
 	this->adjust_t1 = CONCAT_BYTES(reg_data[1], reg_data[0]);
@@ -96,7 +102,11 @@ void BME280Sensor::get_adjust_register_data()
 	
 	
 	Wire.requestFrom(BME280_I2C_ADDRESS, 7);
-	for(int i = 0; i < 7; i++)reg_data[i] = Wire.read();
+	
+	for(int i = 0; i < 7; i++)
+	{
+		reg_data[i] = Wire.read();
+	}
 	
 	this->adjust_h2 = (int16_t)CONCAT_BYTES(reg_data[1], reg_data[0]);
 	this->adjust_h3 = reg_data[2];
@@ -130,7 +140,11 @@ void BME280Sensor::do_humidity_temperature_pressure_measurement(int32_t* tempera
 		Wire.write(0xF3);
 		Wire.endTransmission();
 		Wire.requestFrom(BME280_I2C_ADDRESS, 1);
-		if(Wire.read() & 0x08)break;
+		if(Wire.read() & 0x08)
+		{
+			break;
+		}
+		
 		for(int i = 0; i < 200; i++);
 	}
 	
@@ -146,8 +160,11 @@ void BME280Sensor::do_humidity_temperature_pressure_measurement(int32_t* tempera
 	
 	// do a burst read, for all measurements.
 	Wire.requestFrom(BME280_I2C_ADDRESS, 8);
-	for(int i = 0; i < 8; i++)reg_data[i] = Wire.read();
 	
+	for(int i = 0; i < 8; i++)
+	{
+		reg_data[i] = Wire.read();
+	}
 	
 	// calculate the temperature adc value.
 	calculation_buffer = reg_data[3];
@@ -188,9 +205,6 @@ void BME280Sensor::do_humidity_temperature_pressure_measurement(int32_t* tempera
 	adc_value += reg_data[7];
 	
 	*humidity = this->calculate_humidity_measurement((int32_t)adc_value);
-	
-	
-	
 }
 
 
@@ -205,15 +219,21 @@ int32_t BME280Sensor::calculate_temperature_measurement(int32_t adc_temp)
   	int32_t var1 = ((((adc_temp >> 3) - (t1 << 1))) * t2) >> 11;
   	int32_t var2 = (((((adc_temp >> 4) - t1) * ((adc_temp >> 4) - t1)) >> 12) * t3) >> 14;
           
-    this->t_fine = var1 + var2;
-    
-    int32_t temperature =  (this->t_fine * 5 + 128) >> 8;
-    
-    // check temperature sensor limits, and cut if neccessary.
-	if(temperature < -4000) return -4000;
-	else if(temperature > 8500) return 8500;
-    
-    return temperature;    
+	this->t_fine = var1 + var2;
+
+	int32_t temperature =  (this->t_fine * 5 + 128) >> 8;
+
+	// check temperature sensor limits, and cut if neccessary.
+	if(temperature < -4000)
+	{
+		return -4000;
+	}
+	else if(temperature > 8500)
+	{
+		return 8500;
+	}
+	
+	return temperature;    
 }
 
 
@@ -244,7 +264,10 @@ uint32_t BME280Sensor::calculate_pressure_measurement(int32_t adc_pressure)
 	var1 =(((((int64_t)1) << 47) + var1)) * p1 >> 33;
 
 	// avoid division by zero
-	if (var1 == 0){ return 300; }
+	if(var1 == 0)
+	{
+		return 300;
+	}
 	
 	
 	pressure = 1048576 - adc_pressure;
