@@ -1,3 +1,6 @@
+// 2020 - electronstogo
+
+
 #include "dcf77.h"
 #include "Arduino.h"
 
