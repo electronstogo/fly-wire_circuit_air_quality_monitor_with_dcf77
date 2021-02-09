@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #include <avr/sleep.h>
 #include "sh1106.h"
 #include "bme280.h"
