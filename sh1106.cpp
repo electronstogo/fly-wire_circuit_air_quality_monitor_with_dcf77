@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #include <Wire.h>
 #include "sh1106.h"
 #include <ctype.h>
