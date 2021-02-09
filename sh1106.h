@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #ifndef SH1106_H_
 #define SH1106_H_
 
