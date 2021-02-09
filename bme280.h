@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #ifndef BME280_H_
 #define BME280_H_
 
