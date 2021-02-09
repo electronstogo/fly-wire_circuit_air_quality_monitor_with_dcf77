@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #ifndef SGP40_H_
 #define SGP40_H_
 
