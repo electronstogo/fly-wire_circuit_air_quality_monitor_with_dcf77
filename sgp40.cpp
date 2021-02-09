@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #include "sgp40.h"
 #include <math.h>
 #include <stdlib.h>
