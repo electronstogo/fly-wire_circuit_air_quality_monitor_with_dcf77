@@ -1,3 +1,5 @@
+// 2020 - electronstogo
+
 #ifndef DCF77_H_
 #define DCF77_H_
 
