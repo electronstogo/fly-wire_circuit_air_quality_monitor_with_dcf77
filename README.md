@@ -1,5 +1,5 @@
 # air_quality_monitor_prj_4
----------------------------
+
 
 Flywire circuit that shows different measurement values to rate the indoor air quality (relative humidity, temperature, pressure, VOC index from Sensirion). In addition a DCF77 receiver supports a RTC module with the precise time after start.
 To see what is meant, best way is to look at the images :).
